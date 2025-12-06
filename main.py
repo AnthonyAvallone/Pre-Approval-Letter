@@ -11,6 +11,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from pypdf import PdfReader, PdfWriter
 from io import BytesIO
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -249,7 +253,7 @@ def send_email(subject, html_content, to_recipients, cc_recipients, pdf_path):
 
     # Send via Gmail SMTP
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login("Admin@anthonyavallonemortgages.com", "nvqkdjpjsmwdliti")
+        smtp.login("Admin@anthonyavallonemortgages.com", os.getenv("APP_PASSWORD"))
         smtp.send_message(msg, to_addrs=all_recipients)
 
 def success_email_template(agent_email, client_email, data):
