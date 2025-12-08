@@ -21,24 +21,22 @@ app = FastAPI()
 WORKFLOW_WEBHOOK_URL = "https://services.leadconnectorhq.com/hooks/2iU49EVbjcmVqx5b5XNH/webhook-trigger/nzR1NVUzQofxbp0PtUUB"  
 
 
-@app.post("/receive-form")
+@app.post("/pre_approval/receive-form")
 async def receive_form(request: Request):
 
     # In production use:
     data = await request.json()
-    
     # For testing:
-    data = {
-        'name': 'Anthony A Test',
-        'address': '123 Main St',
-        'purchasePrice': '350000',
-        'downPaymentType': '$',
-        'downPaymentPercent': '',
-        'downPaymentAmount': '20000',
-        'loanType': 'FHA',
-        'propertyType': 'Condo'
-    }
-    
+    #data = {
+     #   'name': 'Anthony A Test',
+      #  'address': '123 Main St',
+       # 'purchasePrice': '350000',
+       # 'downPaymentType': '$',
+       # 'downPaymentPercent': '',
+       # 'downPaymentAmount': '20000',
+      #  'loanType': 'FHA',
+     #   'propertyType': 'Condo'
+    #}
     #     --- New Form Submission Received ---
     # {'name': 'Anthony A Test', 'address': '123, Main st', 'purchasePrice': '350000', 'downPaymentPercent': '', 'downPaymentAmount': '20000', 'propertyType': 'SFH'}
 
@@ -49,13 +47,21 @@ async def receive_form(request: Request):
     down_payment = compute_down_payment(data)
 
     # Add computed value to data dict
-    data["downPayment"] = down_payment  
+    data["downPayment"] = down_payment
 
     # Generate PDF
     output_pdf_path = fill_pdf(data)
 
     # Send the data to your workflow webhook
-    # requests.post(WORKFLOW_WEBHOOK_URL, json=data)
+    print("\n--- Sending to Webhook ---")
+    print(WORKFLOW_WEBHOOK_URL)
+    print("Payload:", data)
+
+    response = requests.post(WORKFLOW_WEBHOOK_URL, json=data)
+
+    print("\n--- Webhook Response ---")
+    print("Status Code:", response.status_code)
+    print("Response Body:", response.text)
 
     return {
         "status": "success",
@@ -308,7 +314,7 @@ def failure_email_template(message):
     """
 
 
-@app.post("/receive-data")
+@app.post("/pre_approval/receive-data")
 async def receive_workflow_data(request: Request):
     """
         Receives data from Webflow like:
@@ -322,7 +328,7 @@ async def receive_workflow_data(request: Request):
     print(data)
 
     # Path to latest PDF created by fill_pdf()
-    pdf_files = glob.glob("filled_preapproval_*.pdf")
+    pdf_files = glob.glob("approval_pdf/filled_preapproval_*.pdf")
     pdf_path = max(pdf_files, key=os.path.getctime) if pdf_files else None
 
     if not pdf_path:
